@@ -2,7 +2,7 @@
 
 #include <iostream>
 /*
-* TP1 - Analisis de Algoritmos.
+*	TP1 - Analisis de Algoritmos.
 * @author B93986 Luis Alfonso Jim�nez
 * @author B95346 Jes�s Alonso Moreno Montero
 * @author B95092 V�ctor Jes�s Mora Abarca
@@ -35,12 +35,15 @@ public:
 
 	};
 
-	~Graph() {};
+	~Graph() {
+		delete[] matrix;
+		delete[] names;
+	};
 
 	void clear();
 	bool isEmpty();
 	Vertex* addVert(char label);
-	void deleteVert(int vertex);
+	void deleteVert(Vertex* vertex);
 	void changeLabel(Vertex* vertex, char new_label);
 	char getLabel(Vertex* vertex);
 	void createEdge(Vertex* vertex1, Vertex* vertex2, double weight);
@@ -90,18 +93,27 @@ Vertex* Graph::addVert(char label) {
 	return nullptr;
 }
 
-void Graph::deleteVert(int vertex) { // Not rdy
-	if (vertex - 1 < cant_vert) {
-		std::cout << cant_vert << std::endl;
+void Graph::deleteVert(Vertex* vertex) {
+	if (vertex->getIndex() < cant_vert) {
+		cant_edges -= this->getNumAdjVertices(vertex);
+
 		//Corrimiento de las filas
-		for (int row = vertex - 1; row < cant_vert; row++) {
+		for (int row = vertex->getIndex(); row < cant_vert - 1; row++) {
 			names[row] = names[row + 1];
-			//matrix[row] = matrix[row + SIZE];
+			names[row]->setIndex(names[row]->getIndex() - 1);
+			for (int colum = 0; colum < cant_vert; colum++) {
+				matrix[(row * SIZE) + colum] = matrix[((row + 1) * SIZE) + colum];
+			}
 		}
 
-
+		//Corrimiento de las columnas
+		for (int row = vertex->getIndex(); row < cant_vert - 1; row++) {
+			for (int colum = vertex->getIndex(); colum < cant_vert; colum++) {
+				matrix[(row * SIZE) + colum] = matrix[(row * SIZE) + colum + 1];
+			}
+		}
+		cant_vert--;
 	}
-
 }
 
 void Graph::changeLabel(Vertex* vertex, char new_label) {
@@ -122,22 +134,22 @@ void Graph::createEdge(Vertex* vertex1, Vertex* vertex2, double weight) {
 
 void Graph::deleteEdge(Vertex* vertex1, Vertex* vertex2) {
 	if (vertex1->getIndex() != vertex2->getIndex() && vertex1->getIndex() < cant_vert && vertex2->getIndex() < cant_vert) {
-		matrix[(vertex1->getIndex()* SIZE)  + vertex2->getIndex()] = -1.0;
-		matrix[(vertex2->getIndex()* SIZE)  + vertex1->getIndex()] = -1.0;
+		matrix[(vertex1->getIndex() * SIZE) + vertex2->getIndex()] = -1.0;
+		matrix[(vertex2->getIndex() * SIZE) + vertex1->getIndex()] = -1.0;
 		cant_edges--;
 	}
 }
 
 void Graph::changeWeight(Vertex* vertex1, Vertex* vertex2, double new_weight) {
 	if (vertex1->getIndex() != vertex2->getIndex() && vertex1->getIndex() < cant_vert && vertex2->getIndex() < cant_vert) {
-		matrix[(vertex1->getIndex()* SIZE) + vertex2->getIndex()] = new_weight;
-		matrix[(vertex2->getIndex()* SIZE) + vertex1->getIndex()] = new_weight;
+		matrix[(vertex1->getIndex() * SIZE) + vertex2->getIndex()] = new_weight;
+		matrix[(vertex2->getIndex() * SIZE) + vertex1->getIndex()] = new_weight;
 	}
 }
 
 double Graph::getWeight(Vertex* vertex1, Vertex* vertex2) {
 	if (vertex1->getIndex() != vertex2->getIndex() && vertex1->getIndex() < cant_vert && vertex2->getIndex() < cant_vert) {
-		return matrix[(vertex1->getIndex()* SIZE)  + vertex2->getIndex()];
+		return matrix[(vertex1->getIndex() * SIZE) + vertex2->getIndex()];
 	}
 	return -1.0;
 }
