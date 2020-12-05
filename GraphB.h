@@ -76,7 +76,6 @@ Vertex* Graph::addVert(char newLabel) {
     Vertex* newVertex = new Vertex(newLabel, this->head);
     this->head = newVertex;
     this->cantVertex++;
-
     return newVertex;
 }
 
@@ -105,11 +104,22 @@ void Graph::deleteEdge(Vertex* vertex1, Vertex* vertex2) {
 }
 
 void Graph::changeWeight(Vertex* vertex1, Vertex* vertex2, double newWeight) {
-
+    double weight = 0.0;
+    bool done = false;
+    if (vertex1 && vertex2) {
+        Edge* tempEdge = vertex1->nextAdj;
+        while (tempEdge != nullptr && !done) {
+            if (tempEdge->to == vertex2) {
+                weight = tempEdge->weight;
+                done = true;
+            }
+            tempEdge = tempEdge->nextEdge;
+        }
+    }
 }
 
 double Graph::getWeight(Vertex* vertex1, Vertex* vertex2) {
-    double weight = 0.0;
+    double weight = -1.0;
     bool done = false;
     if (vertex1 && vertex2) {
         Edge* tempEdge = vertex1->nextAdj;
