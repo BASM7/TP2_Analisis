@@ -1,5 +1,6 @@
 #pragma once
 
+#include <windows.h>
 #include <unordered_set>
 #include <set>
 #include <algorithm>
@@ -8,12 +9,17 @@
 #include <map>
 #include <iterator>
 #include <vector>
+#include <locale>
+#include <conio.h>
 
 #include "GraphB.h"
+//#include "GraphA.h"
 
 typedef std::unordered_set<Vertex*> dic_vertices;
 typedef std::vector<std::pair<Vertex*, Vertex*>> set_of_edges;
 typedef std::vector<double> vector_weights;
+
+std::map<std::string, Graph*> graphRegistry;
 
 // Funciones auxiliares.
 bool isVertexInDic(dic_vertices diccionary, Vertex* vertex) {
@@ -71,7 +77,7 @@ void printGraphWidth(Graph* graph) {
 // Algoritmos.
 
 // Algoritmo A.
-bool hasCycles(Graph* graph) {
+bool hasCycleWidth(Graph* graph) {
     bool result = false;
     if (!graph->isEmpty()) {
         Vertex* currentVertex = graph->getHead();
@@ -111,9 +117,48 @@ bool hasCycles(Graph* graph) {
     return result;
 }
 
-
 // Algoritmo B.
 
+void getCicle(Graph* graph, std::unordered_set<Vertex*> visitedVertices, Vertex* vertex, Vertex* adyacent, bool& cicle) {
+    Vertex* adyacentAdyacent = graph->getFirstAdj(adyacent);
+    while (adyacentAdyacent != nullptr && !cicle) {
+        if (visitedVertices.find(adyacentAdyacent) != visitedVertices.end() && graph->isEdge(vertex, adyacentAdyacent) && adyacentAdyacent != vertex) {
+            cicle = true;
+        }
+        else {
+            adyacentAdyacent = graph->getNextAdj(adyacent, adyacentAdyacent);
+        }
+    }
+}
+
+void depthRecur(Graph* graph, Vertex* vertex, std::unordered_set<Vertex*>& visitedVertices, bool& cicle) { // a encola b y b encola a por eso 
+
+    visitedVertices.insert(vertex);
+    std::cout << graph->getLabel(vertex);
+    Vertex* adyacent = graph->getFirstAdj(vertex);
+    while (adyacent != nullptr && !cicle) {
+        if (visitedVertices.find(adyacent) == visitedVertices.end()) {
+            getCicle(graph, visitedVertices, vertex, adyacent, cicle);
+            depthRecur(graph, adyacent, visitedVertices, cicle);
+        }
+        adyacent = graph->getNextAdj(vertex, adyacent);
+    }
+}
+
+bool cicleGraphDepth(Graph* graph) {
+    bool cicle = false;
+    if (!graph->isEmpty()) {
+        Vertex* vertex = graph->getHead();
+        std::unordered_set<Vertex*> visitedVertices;
+        while (vertex != nullptr && !cicle) {
+            if (visitedVertices.find(vertex) == visitedVertices.end()) {
+                depthRecur(graph, vertex, visitedVertices, cicle);
+            }
+            vertex = graph->getNextVert(vertex);
+        }
+    }
+    return cicle;
+}
 
 // Algoritmo C.
 void recursivityDepthFirst(Graph* graph, Vertex* vertex, std::unordered_set<Vertex*>& visitedVertices, int& visited) {
@@ -279,7 +324,7 @@ void dijkstra(Graph* graph, Vertex* vertex) {// a b d e f
 }
 
 // Algoritmo F. Floyd.
-void getMinimunCost(Graph* graph) {
+void floyd(Graph* graph) {
     std::vector<double> weight_vector;
     std::vector<Vertex*> pivots;
     if (!graph->isEmpty()) {
@@ -388,24 +433,53 @@ void hamilton(Graph* graph) {
 }
 
 // Algoritmo H.
+bool bestSolutionColoring(Graph* graph, bool* matrixAdj, int numPosibleColors, int indexV, int* &colors) {
+    if (indexV == graph->getNumVertices()) {
+        return true;
+    }
+
+    for (int i = 0; i < numPosibleColors + 1; i++) {
+        bool isSafeToPaint = true;
+        int j = 0;
+        while (j < graph->getNumVertices() && isSafeToPaint) {
+            if (matrixAdj[indexV*graph->getNumVertices()+j] == 1 && colors[j] == i) {
+                isSafeToPaint = false;
+            }
+            j++;
+        }
+
+        if (isSafeToPaint) {
+            colors[indexV] = i;
+            if (bestSolutionColoring(graph, matrixAdj, numPosibleColors, indexV + 1, colors)) {
+                return true;
+            }
+            else {
+                colors[indexV] = 0;
+            }
+        }
+    }
+    return false;
+}
+
 void colorGraph(Graph* graph) {
     if (!graph->isEmpty()){
         int numV = graph->getNumVertices();
-        bool* matrixAdj = new bool[numV*numV];
+        int sizeMatrix = numV * numV;
+        bool* matrixAdj = new bool[sizeMatrix];
 
         Vertex* vertex = graph->getHead();
         Vertex* secondVertex;
         int row = 0;
-        int colum;
         while (vertex != nullptr) {
-            colum = 0;
+            int colum = 0;
             secondVertex = graph->getHead();
             while (secondVertex != nullptr) {
+                int indexMatrix = row * numV + colum;
                 if (graph->getWeight(vertex, secondVertex) > 0) {
-                    matrixAdj[row*numV+colum] = 1;
+                    matrixAdj[indexMatrix] = 1;
                 }
                 else {
-                    matrixAdj[row * numV + colum] = 0;
+                    matrixAdj[indexMatrix] = 0;
                 }
                 colum++;
                 secondVertex = graph->getNextVert(secondVertex);
@@ -414,6 +488,20 @@ void colorGraph(Graph* graph) {
             vertex = graph->getNextVert(vertex);
         }
 
+        int* colors = new int[numV];
+        for (int i = 1; i < numV; i++) {
+            Vertex* tempV = graph->getHead();
+            if (bestSolutionColoring(graph, matrixAdj, i, 0, colors)) {
+                for (int j = 0; j < numV; j++) {
+                    std::cout << graph->getLabel(tempV) << " con color : " << colors[j] << std::endl;
+                    tempV = graph->getNextVert(tempV);
+                }
+                break;
+            }
+        }
+
+        delete[] matrixAdj;
+        delete[] colors;
     }
 
 }
@@ -581,7 +669,7 @@ void isolateVertex(Graph* graph, Vertex* vertex) {
     Vertex* adjVertex = graph->getFirstAdj(vertex);
     while (adjVertex != nullptr) {
         graph->deleteEdge(vertex, adjVertex);
-        adjVertex = graph->getNextAdj(vertex, adjVertex);
+        adjVertex = graph->getFirstAdj(vertex);
     }
 }
 
@@ -638,7 +726,335 @@ Vertex* getVertex(Graph* graph, char labelToSearch) {
     return nullptr;
 }
 
+void clear(){
+#if defined _WIN32
+    system("cls");
+#elif defined (__LINUX__) || defined(__gnu_linux__) || defined(__linux__)
+    system("clear");
+#elif defined (__APPLE__)
+    system("clear");
+#endif
+}
 
+void printGraphNames() {
+    for (auto it = graphRegistry.begin(); it != graphRegistry.end(); ++it) {
+        std::cout << "\t" << it->first << std::endl;
+    }
+}
+
+void pressEnter() {
+    std::cout << "\tIngrese Enter para continuar..." << std::endl;
+    _getch();
+}
+
+Vertex* getValidVertex(Graph* graph, std::string message) {
+    Vertex* vertex = nullptr;
+    bool valid = false;
+    char character;
+    while (!valid) {
+        std::cout << message << std::endl;
+        std::cin >> character;
+        vertex = getVertex(graph, character);
+        if (vertex == nullptr) {
+            std::cout << "\tNo se pudo encontrar ese valor..." << std::endl;
+        }
+        else {
+            valid = true;
+        }
+    }
+    return vertex;
+}
+
+std::string getGraphName() {
+    bool validName = false;
+    std::string name = "";
+    while (!validName) {
+        std::cout << "\tIngrese el nombre del Grafo: " << std::endl;
+        std::cin >> name;
+        if (!(graphRegistry.find(name) == graphRegistry.end())) {
+            validName = true;
+        }
+    }
+    return name;
+}
+
+void showMenu() {
+
+    setlocale(LC_ALL, "spanish");
+    SetConsoleCP(1252);
+    SetConsoleOutputCP(1252);
+
+    bool finished = false;
+
+    int option;
+
+    do {
+        clear();
+
+        std::cout << "| Menú de prueba para operadores y algoritmos básicos del modelo Grafo." << std::endl;
+        std::cout << "| Grafos actuales:" << std::endl;
+        printGraphNames();
+        std::cout << "| =====================================================================" << std::endl;
+        std::cout << "| 1) Iniciar.\t\t16) TieneCiclosAncho." << std::endl;
+        std::cout << "| 2) Destruir.\t\t17) TieneCiclosProfundidad." << std::endl;
+        std::cout << "| 3) Vaciar.\t\t18) esConexoProfundidad." << std::endl;
+        std::cout << "| 4) Vacio.\t\t19) esConexoWarshall." << std::endl;
+        std::cout << "| 5) AgregarVertice.\t20) Dijkstra." << std::endl;
+        std::cout << "| 6) EliminarVertice.\t21) Floyd." << std::endl;
+        std::cout << "| 7) ModificarEtiqueta.\t22) Hamilton." << std::endl;
+        std::cout << "| 8) AgregarArista.\t23) Colorear." << std::endl;
+        std::cout << "| 9) EliminarArista.\t24) Prim." << std::endl;
+        std::cout << "| 10) ModificarPeso.\t25) Kruskal." << std::endl;
+        std::cout << "| 11) ObtenerPeso.\t26) AislarVertice." << std::endl;
+        std::cout << "| 12) ExisteArista.\t27) SumaPesos." << std::endl;
+        std::cout << "| 13) NumAristas. \t28) ImprimirGrafo." << std::endl;
+        std::cout << "| 14) NumVertices." << std::endl;
+        std::cout << "| 15) NumVerticesAdyacentes." << std::endl;
+
+        std::cout << std::endl;
+        std::cout << "| 0) Salir." << std::endl;
+        std::cout << "| =====================================================================" << std::endl;
+        std::cin >> option;
+
+        Graph* temp_graph;
+        Vertex* temp_vertex1 = nullptr;
+        Vertex* temp_vertex2 = nullptr;
+        char character;
+        double weigth;
+        std::string name = "";
+
+        switch (option)
+        {
+        case 0:
+            finished = true;
+
+            //delete temp_graph;
+
+            break;
+        case 1:
+            std::cout << "\tNombre del Grafo: " << std::endl;
+            std::cin >> name;
+            temp_graph = new Graph();
+            graphRegistry.insert({ name, temp_graph });
+            pressEnter();
+            break;
+        case 2:
+            // Destruir.
+            std::cout << "\tNombre del Grafo: " << std::endl;
+            std::cin >> name;
+            temp_graph = graphRegistry.find(name)->second;
+            graphRegistry.erase(graphRegistry.find(name));
+
+            //delete temp_graph;
+            break;
+        case 3:
+            // Vaciar
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            //temp_graph->clear();
+            pressEnter();
+            break;
+        case 4:
+            // Vacio.
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            if (temp_graph->isEmpty())
+                std::cout << "\t El grafo esta vacio." << std::endl;
+            else
+                std::cout << "\t El grafo no esta vacio." << std::endl;
+            pressEnter();
+            break;
+        case 5:
+            // AgregarVertice.
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            std::cout << "\tIngrese el valor: " << std::endl;
+            std::cin >> character;
+            temp_graph->addVert(character);
+            pressEnter();
+            break;
+        case 6:
+            // EliminarVertice.
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            temp_vertex1 = getValidVertex(temp_graph, "\tIngrese el vertice a borrar: ");
+            temp_graph->deleteVert(temp_vertex1);
+            break;
+        case 7:
+            // ModificarEtiqueta.
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            temp_vertex1 = getValidVertex(temp_graph, "\tIngrese el valor a cambiar: ");
+            std::cout << "\tIngrese el nuevo valor: " << std::endl;
+            std::cin >> character;
+            temp_graph->changeLabel(temp_vertex1, character);
+            break;
+        case 8:
+            // AgregarArista.
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            temp_vertex1 = getValidVertex(temp_graph, "\tIngrese el primer vertice: ");
+            temp_vertex2 = getValidVertex(temp_graph, "\tIngrese el segundo vertice: ");
+            std::cout << "\tIngrese el peso: " << std::endl;
+            std::cin >> weigth;
+            temp_graph->createEdge(temp_vertex1, temp_vertex2, weigth);
+            break;
+        case 9:
+            // EliminarArista.
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            temp_vertex1 = getValidVertex(temp_graph, "\tIngrese el primer vertice: ");
+            temp_vertex2 = getValidVertex(temp_graph, "\tIngrese el segundo vertice: ");
+
+            temp_graph->deleteEdge(temp_vertex1, temp_vertex2);
+            break;
+        case 10:
+            // ModificarPeso
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            temp_vertex1 = getValidVertex(temp_graph, "\tIngrese el primer vertice: ");
+            temp_vertex2 = getValidVertex(temp_graph, "\tIngrese el segundo vertice: ");
+            std::cout << "\tIngrese el nuevo peso: " << std::endl;
+            std::cin >> weigth;
+
+            temp_graph->changeWeight(temp_vertex1, temp_vertex2, weigth);
+            break;
+        case 11:
+            // ObtenerPeso			
+            std::cout << "\tObtener peso..." << std::endl;
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            temp_vertex1 = getValidVertex(temp_graph, "\tIngrese el primer vertice: ");
+            temp_vertex2 = getValidVertex(temp_graph, "\tIngrese el segundo vertice: ");
+
+            std::cout << "\tEl peso es: " << temp_graph->getWeight(temp_vertex1, temp_vertex2);
+            pressEnter();
+            break;
+        case 12:
+            // ExisteArista.
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            temp_vertex1 = getValidVertex(temp_graph, "\tIngrese el primer vertice: ");
+            temp_vertex2 = getValidVertex(temp_graph, "\tIngrese el segundo vertice: ");
+
+            if (temp_graph->isEdge(temp_vertex1, temp_vertex2))
+                std::cout << "\t Si existe esa arista." << std::endl;
+            else
+                std::cout << "\t No existe esa arista." << std::endl;
+            pressEnter();
+            break;
+        case 13:
+            // NumAristas.
+            std::cout << "\tObtener numero de aristas..." << std::endl;
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            std::cout << "\t La cantidad de aristas es: " << temp_graph->getNumEdges() << std::endl;
+            pressEnter();
+            break;
+        case 14:
+            // NumVertices.
+            std::cout << "\tObtener numero de vertices..." << std::endl;
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            std::cout << "\t La cantidad de vertices es: " << temp_graph->getNumVertices() << std::endl;
+            pressEnter();
+            break;
+        case 15:
+            // NumVerticesAdj.
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            temp_vertex1 = getValidVertex(temp_graph, "\tIngrese el valor: ");
+            std::cout << "\t La cantidad de vertices adyacentes es: " << temp_graph->getNumAdjVertices(temp_vertex1) << std::endl;
+            pressEnter();
+            break;
+        case 16:
+            // TieneCiclosAncho.
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            if (hasCycleWidth(temp_graph))
+                std::cout << "\t Si tiene ciclos." << std::endl;
+            else
+                std::cout << "\t No tiene ciclos." << std::endl;
+            pressEnter();
+            break;
+        case 17:
+            // TieneCiclosProfundidad
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            if (cicleGraphDepth(temp_graph))
+                std::cout << "\t Si tiene ciclos." << std::endl;
+            else
+                std::cout << "\t No tiene ciclos." << std::endl;
+            pressEnter();
+            break;
+        case 18:
+            // esConexoProfundidad 
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            if (isRelatedDepthFirst(temp_graph))
+                std::cout << "\t Si es conexo." << std::endl;
+            else
+                std::cout << "\t No es conexo." << std::endl;
+            pressEnter();
+            break;
+        case 19:
+            // esConexoWarshall
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            if (isRelatedWarshall(temp_graph))
+                std::cout << "\t Si es conexo." << std::endl;
+            else
+                std::cout << "\t No es conexo." << std::endl;
+            pressEnter();
+            break;
+        case 20:
+            // Dijkstra.
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            temp_vertex1 = getValidVertex(temp_graph, "\tIngrese el valor: ");
+            dijkstra(temp_graph, temp_vertex1);
+            pressEnter();
+            break;
+        case 21:
+            // Floyd.
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            floyd(temp_graph);
+            pressEnter();
+            break;
+        case 22:
+            // Hamilton.
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            hamilton(temp_graph);
+            pressEnter();
+            break;
+        case 23:
+            // Colorear.
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            colorGraph(temp_graph);
+            pressEnter();
+            break;
+        case 24:
+            // Prim.
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            prim(temp_graph);
+            pressEnter();
+            break;
+        case 25:
+            // Kruskal.
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            kruskal(temp_graph);
+            pressEnter();
+            break;
+        case 26:
+            // ArislarVertice.
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            temp_vertex1 = getValidVertex(temp_graph, "\tIngrese el valor: ");
+            isolateVertex(temp_graph, temp_vertex1);
+            
+            break;
+        case 27:
+            // SumaPesos.
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            std::cout << "\t El peso total es: " << totalWeight(temp_graph) << std::endl;
+            pressEnter();
+            break;
+
+        case 28:
+            // Imprimir.
+            temp_graph = graphRegistry.find(getGraphName())->second;
+            printGraphWidth(temp_graph);
+            pressEnter();
+            break;
+
+        default:
+            break;
+        }
+
+    } while (!finished);
+
+}
 
 int main()
 {
@@ -664,12 +1080,9 @@ int main()
     test_graph->createEdge(vE, vF, 4.0);
     test_graph->createEdge(vF, vD, 9.0);
 
-    //printGraphWidth(test_graph);
+    graphRegistry.insert({ "gA", test_graph });
 
-    //std::cout << hasCycles(test_graph) << std::endl;
-
-    //prim(test_graph);
-    kruskal(test_graph);
+    showMenu();
 
     return 0;
 }

@@ -52,6 +52,7 @@ public:
     Graph() {}
 
     bool isEmpty() { return cantVertex == 0; };
+    void clear();
     Vertex* addVert(char newLabel);
     void deleteVert(Vertex* vertexToDelete);
     void changeLabel(Vertex* vertexToChange, char newLabel);
