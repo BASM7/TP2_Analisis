@@ -141,6 +141,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="GraphA.h" />
     <ClInclude Include="GraphB.h" />
   </ItemGroup>
   <ItemGroup>

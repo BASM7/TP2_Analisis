@@ -57,7 +57,6 @@ void printGraphWidth(Graph* graph) {
                             std::cout << " -> " << graph->getLabel(adjVertex) << std::endl;
                         }
 
-
                         adjVertex = graph->getNextAdj(tempVertex, adjVertex);
                     }
                     visitedVertices.insert(tempVertex);
@@ -117,22 +116,307 @@ bool hasCycles(Graph* graph) {
 
 
 // Algoritmo C.
+void recursivityDepthFirst(Graph* graph, Vertex* vertex, std::unordered_set<Vertex*>& visitedVertices, int& visited) {
+    Vertex* toDo = graph->getFirstAdj(vertex);
+    while (toDo != nullptr) {
+        if (visitedVertices.find(toDo) == visitedVertices.end()) {
+            visited++;
+            visitedVertices.insert(toDo);
+            recursivityDepthFirst(graph, toDo, visitedVertices, visited);
+        }
+        toDo = graph->getNextAdj(vertex, toDo);
+    }
+}
+
+bool isRelatedDepthFirst(Graph* graph) {
+    bool related = true;
+    if (!graph->isEmpty()) {
+        Vertex* vertex = graph->getHead();
+        std::unordered_set<Vertex*> visitedVertices;
+        int finalVisited = 1;
+        visitedVertices.insert(vertex);
+        recursivityDepthFirst(graph, vertex, visitedVertices, finalVisited);
+        if (finalVisited != graph->getNumVertices()) {
+            related = false;
+        }
+    }
+    return related;
+}
+
+// Algoritmo D. Warshall.
+void doMatrix(std::vector <std::vector<bool>>& matrix, int v) {
+    int row = 0;
+    int colum;
+    while (row < matrix.size()) {
+        if (row != v && matrix[row][v] == 1) {
+            colum = 0;
+            while (colum < matrix.size()) {
+                if (matrix[row][colum] == 0 && matrix[v][colum] == 1) {
+                    matrix[row][colum] = 1;
+                }
+                colum++;
+            }
+        }
+        row++;
+    }
+}
+
+bool isRelatedWarshall(Graph* graph) {
+    bool related = true;
+    if (!graph->isEmpty()) {
+        int sizeGrafo = graph->getNumVertices();
+        std::vector<std::vector<bool>> matrix;
+        std::vector<bool> toPush(sizeGrafo, 0);
+
+        for (int i = 0; i < sizeGrafo; i++) {
+            matrix.push_back(toPush);
+        }
 
 
-// Algoritmo D.
+        Vertex* vertex = graph->getHead();;
+        Vertex* secondVertex;
+        int row = 0;
+        int colum;
+        while (vertex != nullptr) {
+            colum = 0;
+            secondVertex = graph->getHead();
+            while (secondVertex != nullptr) {
+                if (graph->getWeight(vertex, secondVertex) > 0) {
+                    matrix[row][colum] = 1;
+                }
+                else {
+                    matrix[row][colum] = 0;
+                }
+                colum++;
+                secondVertex = graph->getNextVert(secondVertex);
+            }
+            row++;
+            vertex = graph->getNextVert(vertex);
+        }
 
+        int haciendoVertice = 0;
 
-// Algoritmo E.
+        while (haciendoVertice < sizeGrafo) {
+            doMatrix(matrix, haciendoVertice);
+            haciendoVertice++;
+        }
 
+        row = 0;
+        while (row < sizeGrafo && related) {
+            colum = 0;
+            while (colum < sizeGrafo && related) {
+                if (matrix[row][colum] == 0) {
+                    related = false;
+                }
+                else {
+                    colum++;
+                }
+            }
+            row++;
+        }
+    }
+    return related;
+}
 
-// Algoritmo F.
+// Algoritmo E. Dijkstra
+void dijkstra(Graph* graph, Vertex* vertex) {// a b d e f
+    std::vector<double> weight_vector;//peso
+    std::vector<Vertex*> path;//donde voy
+    std::vector<Vertex*> pivots;//donde llego
+    std::vector<bool> done;
+    Vertex* temp_vertex;
+    if (!graph->isEmpty()) {
+        temp_vertex = graph->getHead();
+        while (temp_vertex != nullptr) {
+            if (temp_vertex != vertex) {
+                done.push_back(0);
+                path.push_back(vertex);
+                pivots.push_back(temp_vertex);
+                weight_vector.push_back(graph->getWeight(vertex, temp_vertex));
+            }
+            temp_vertex = graph->getNextVert(temp_vertex);
+        }
 
+        for (int i = 0; i < path.size(); i++) {
+            std::cout << graph->getLabel(path[i]) << " to " << graph->getLabel(pivots[i]) << " peso:" << weight_vector[i] << std::endl;
+        }
 
-// Algoritmo G.
+        int do_pivot = 0;
+        int index;
+        while (do_pivot < pivots.size() - 1) {
+            index = 0;
+            for (int i = 0; i < pivots.size(); i++) {
+                if (done[index] && weight_vector[i] != -1) {
+                    index = i;
+                }
+                if (weight_vector[index] > weight_vector[i] && done[i] != 1 && weight_vector[i] != -1) {
+                    index = i;
+                }
+            }
 
+            done[index] = true;
+            temp_vertex = pivots[index];
+
+            for (int i = 0; i < pivots.size(); i++) {
+                if (index != i) {
+                    if (weight_vector[i] > graph->getWeight(temp_vertex, pivots[i]) && !done[i] && weight_vector[i] != -1) {
+                        weight_vector[i] = graph->getWeight(temp_vertex, pivots[i]);
+                        path[i] = temp_vertex;
+                    }
+                    else if (weight_vector[i] == -1 && graph->getWeight(temp_vertex, pivots[i]) != -1) {
+                        weight_vector[i] = graph->getWeight(temp_vertex, pivots[i]);
+                        path[i] = temp_vertex;
+                    }
+                }
+            }
+
+            do_pivot++;
+        }
+        for (int i = 0; i < pivots.size(); i++) {
+            std::cout << "Vertice [" << graph->getLabel(pivots[i]) << "]" << " = " << graph->getLabel(path[i]) << std::endl;
+        }
+    }
+}
+
+// Algoritmo F. Floyd.
+void getMinimunCost(Graph* graph) {
+    std::vector<double> weight_vector;
+    std::vector<Vertex*> pivots;
+    if (!graph->isEmpty()) {
+        int num_vert = graph->getNumVertices(); //cantidad de nodos 
+        Vertex* temp_vertex = graph->getHead();
+        Vertex* help_vertex;
+
+        while (temp_vertex != nullptr) {
+            help_vertex = graph->getHead();
+            while (help_vertex != nullptr) {
+                weight_vector.push_back(graph->getWeight(temp_vertex, help_vertex));
+                help_vertex = graph->getNextVert(help_vertex);
+            }
+            pivots.push_back(temp_vertex);
+            temp_vertex = graph->getNextVert(temp_vertex);
+        }
+
+        std::cout << std::endl;
+        double weight = 0.0;
+        for (int pivot = 0; pivot < num_vert; pivot++) {
+            for (int second_pivot = 0; second_pivot < num_vert; second_pivot++) {
+                if (pivot != second_pivot) {
+                    for (int third_pivot = 0; third_pivot < num_vert; third_pivot++) {
+                        if (second_pivot != third_pivot && graph->isEdge(pivots[pivot], pivots[second_pivot]) && graph->isEdge(pivots[second_pivot], pivots[third_pivot])) {
+                            weight = weight_vector[(pivot * num_vert) + second_pivot] + weight_vector[(second_pivot * num_vert) + third_pivot];
+                            if (weight_vector[(pivot * num_vert) + third_pivot] > weight && weight > 0) {
+                                std::cout << weight << " ";
+                                weight_vector[(pivot * num_vert) + third_pivot] = weight;
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+        std::cout << std::endl;
+        for (int i = 0; i < weight_vector.size(); i++) {
+            if (i % num_vert == 0 && i != 0) {
+                std::cout << std::endl;
+                std::cout << weight_vector[i] << " ";
+            }
+            else {
+                std::cout << weight_vector[i] << "  ";
+            }
+        }
+    }
+}
+
+// Algoritmo G. Hamilton.
+bool find(std::vector<Vertex*> path, Vertex* v) {
+    int row = 0;
+    bool finded = false;
+    while (row < path.size() && !finded) {
+        if (path[row] == v) {
+            finded = true;
+        }
+        row++;
+    }
+    return finded;
+}
+void doHamiltonCycle(Graph* graph, std::vector<Vertex*>& bestPath, std::vector<Vertex*>& path, int pos, int& bestWeight, int& pathWeight) {
+    if (pos == path.size() && graph->isEdge(path[pos - 1], path[0])) {
+        if (bestWeight > pathWeight || bestWeight == 0) {
+            bestPath = path;
+            bestWeight = pathWeight;
+        }
+    }
+    else {
+        Vertex* adyancent = graph->getFirstAdj(path[pos - 1]);
+        while (adyancent != nullptr) {
+            if (!find(path, adyancent)) {
+                path[pos] = adyancent;
+                pathWeight += graph->getWeight(path[pos - 1], path[pos]);
+                doHamiltonCycle(graph, bestPath, path, pos + 1, bestWeight, pathWeight);
+                pathWeight -= graph->getWeight(path[pos - 1], path[pos]);
+                path[pos] = nullptr;
+            }
+            adyancent = graph->getNextAdj(path[pos - 1], adyancent);
+        }
+    }
+}
+
+void hamilton(Graph* graph) {
+    if (!graph->isEmpty()) {
+        std::vector<Vertex*> bestPath(graph->getNumVertices());
+        std::vector<Vertex*> path(graph->getNumVertices());
+        int bestWeight = 0;
+        int pathWeight = 0;
+
+        Vertex* vertex = graph->getHead();
+        while (vertex != nullptr) {
+            path[0] = vertex;
+            doHamiltonCycle(graph, bestPath, path, 1, bestWeight, pathWeight);
+            vertex = graph->getNextVert(vertex);
+        }
+
+        for (int i = 0; i < path.size(); i++) {
+            if (i + 1 == path.size()) {
+                std::cout << graph->getLabel(bestPath[i]) << " size:" << bestWeight << std::endl;
+            }
+            else {
+                std::cout << graph->getLabel(bestPath[i]) << "->";
+            }
+        }
+    }
+}
 
 // Algoritmo H.
+void colorGraph(Graph* graph) {
+    if (!graph->isEmpty()){
+        int numV = graph->getNumVertices();
+        bool* matrixAdj = new bool[numV*numV];
 
+        Vertex* vertex = graph->getHead();
+        Vertex* secondVertex;
+        int row = 0;
+        int colum;
+        while (vertex != nullptr) {
+            colum = 0;
+            secondVertex = graph->getHead();
+            while (secondVertex != nullptr) {
+                if (graph->getWeight(vertex, secondVertex) > 0) {
+                    matrixAdj[row*numV+colum] = 1;
+                }
+                else {
+                    matrixAdj[row * numV + colum] = 0;
+                }
+                colum++;
+                secondVertex = graph->getNextVert(secondVertex);
+            }
+            row++;
+            vertex = graph->getNextVert(vertex);
+        }
+
+    }
+
+}
 
 // Algoritmo I.
 Vertex* getMinEdgesPrim(dic_vertices pivotsUsed, set_of_edges edges, vector_weights weights) {
@@ -293,7 +577,13 @@ void kruskal(Graph* graph) {
 }
 
 // Algoritmo K.
-
+void isolateVertex(Graph* graph, Vertex* vertex) {
+    Vertex* adjVertex = graph->getFirstAdj(vertex);
+    while (adjVertex != nullptr) {
+        graph->deleteEdge(vertex, adjVertex);
+        adjVertex = graph->getNextAdj(vertex, adjVertex);
+    }
+}
 
 // Algoritmo L.
 double totalWeight(Graph* graph) {
@@ -352,8 +642,8 @@ Vertex* getVertex(Graph* graph, char labelToSearch) {
 
 int main()
 {
-    Graph* test_graph = new Graph();
-    //Test case 1.
+    // Grafo de prueba.
+    Graph* test_graph = new Graph();    
     Vertex* vA = test_graph->addVert('A');
     Vertex* vB = test_graph->addVert('B');
     Vertex* vC = test_graph->addVert('C');
@@ -376,10 +666,10 @@ int main()
 
     //printGraphWidth(test_graph);
 
-    std::cout << hasCycles(test_graph) << std::endl;
+    //std::cout << hasCycles(test_graph) << std::endl;
 
     //prim(test_graph);
-    //kruskal(test_graph);
+    kruskal(test_graph);
 
     return 0;
 }

@@ -39,7 +39,7 @@ public:
 
 	void clear();
 	bool isEmpty();
-	void addVert(char label);
+	Vertex* addVert(char label);
 	void deleteVert(int vertex);
 	void changeLabel(Vertex* vertex, char new_label);
 	char getLabel(Vertex* vertex);
@@ -70,10 +70,11 @@ bool Graph::isEmpty() {
 }
 
 void Graph::clear() {
-
+	cant_vert = 0;
+	cant_edges = 0;
 }
 
-void Graph::addVert(char label) {
+Vertex* Graph::addVert(char label) {
 	if (cant_vert < SIZE) {
 		Vertex* vertex = new Vertex();
 		vertex->setIndex(cant_vert);
@@ -83,7 +84,10 @@ void Graph::addVert(char label) {
 			matrix[index] = -1;
 		}
 		cant_vert++;
+
+		return vertex;
 	}
+	return nullptr;
 }
 
 void Graph::deleteVert(int vertex) { // Not rdy
@@ -109,31 +113,31 @@ char Graph::getLabel(Vertex* vertex) {
 }
 
 void Graph::createEdge(Vertex* vertex1, Vertex* vertex2, double weight) {
-	if (vertex1->getIndex() != vertex2->getIndex() && vertex1->getIndex() < cant_vert && vertex2->getIndex() < cant_vert) {
-		matrix[(vertex1->getIndex()) * cant_vert + (vertex2->getIndex())] = weight;
-		matrix[(vertex2->getIndex()) * cant_vert + (vertex1->getIndex())] = weight;
+	if (vertex1->getLabel() != vertex2->getLabel()) {
+		matrix[(vertex1->getIndex() * SIZE) + vertex2->getIndex()] = weight;
+		matrix[(vertex2->getIndex() * SIZE) + vertex1->getIndex()] = weight;
 		cant_edges++;
 	}
 }
 
 void Graph::deleteEdge(Vertex* vertex1, Vertex* vertex2) {
 	if (vertex1->getIndex() != vertex2->getIndex() && vertex1->getIndex() < cant_vert && vertex2->getIndex() < cant_vert) {
-		matrix[(vertex1->getIndex()) * cant_vert + (vertex2->getIndex())] = -1.0;
-		matrix[(vertex2->getIndex()) * cant_vert + (vertex1->getIndex())] = -1.0;
+		matrix[(vertex1->getIndex()* SIZE)  + vertex2->getIndex()] = -1.0;
+		matrix[(vertex2->getIndex()* SIZE)  + vertex1->getIndex()] = -1.0;
 		cant_edges--;
 	}
 }
 
 void Graph::changeWeight(Vertex* vertex1, Vertex* vertex2, double new_weight) {
 	if (vertex1->getIndex() != vertex2->getIndex() && vertex1->getIndex() < cant_vert && vertex2->getIndex() < cant_vert) {
-		matrix[(vertex1->getIndex()) * cant_vert + (vertex2->getIndex())] = new_weight;
-		matrix[(vertex2->getIndex()) * cant_vert + (vertex1->getIndex())] = new_weight;
+		matrix[(vertex1->getIndex()* SIZE) + vertex2->getIndex()] = new_weight;
+		matrix[(vertex2->getIndex()* SIZE) + vertex1->getIndex()] = new_weight;
 	}
 }
 
 double Graph::getWeight(Vertex* vertex1, Vertex* vertex2) {
 	if (vertex1->getIndex() != vertex2->getIndex() && vertex1->getIndex() < cant_vert && vertex2->getIndex() < cant_vert) {
-		return matrix[(vertex1->getIndex()) * cant_vert + (vertex2->getIndex())];
+		return matrix[(vertex1->getIndex()* SIZE)  + vertex2->getIndex()];
 	}
 	return -1.0;
 }
