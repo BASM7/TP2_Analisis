@@ -11,6 +11,7 @@
 #include <vector>
 #include <locale>
 #include <conio.h>
+#include <iomanip>
 
 #include "GraphB.h"
 //#include "GraphA.h"
@@ -134,7 +135,6 @@ void getCicle(Graph* graph, std::unordered_set<Vertex*> visitedVertices, Vertex*
 void depthRecur(Graph* graph, Vertex* vertex, std::unordered_set<Vertex*>& visitedVertices, bool& cicle) { // a encola b y b encola a por eso 
 
     visitedVertices.insert(vertex);
-    std::cout << graph->getLabel(vertex);
     Vertex* adyacent = graph->getFirstAdj(vertex);
     while (adyacent != nullptr && !cicle) {
         if (visitedVertices.find(adyacent) == visitedVertices.end()) {
@@ -282,13 +282,9 @@ void dijkstra(Graph* graph, Vertex* vertex) {// a b d e f
             temp_vertex = graph->getNextVert(temp_vertex);
         }
 
-        for (int i = 0; i < path.size(); i++) {
-            std::cout << graph->getLabel(path[i]) << " to " << graph->getLabel(pivots[i]) << " peso:" << weight_vector[i] << std::endl;
-        }
-
         int do_pivot = 0;
         int index;
-        while (do_pivot < pivots.size() - 1) {
+        while (do_pivot < pivots.size()) {
             index = 0;
             for (int i = 0; i < pivots.size(); i++) {
                 if (done[index] && weight_vector[i] != -1) {
@@ -318,7 +314,8 @@ void dijkstra(Graph* graph, Vertex* vertex) {// a b d e f
             do_pivot++;
         }
         for (int i = 0; i < pivots.size(); i++) {
-            std::cout << "Vertice [" << graph->getLabel(pivots[i]) << "]" << " = " << graph->getLabel(path[i]) << std::endl;
+            std::cout << "Ir a " << graph->getLabel(pivots[i])
+                << " por " << graph->getLabel(path[i]) << std::endl;
         }
     }
 }
@@ -350,8 +347,7 @@ void floyd(Graph* graph) {
                     for (int third_pivot = 0; third_pivot < num_vert; third_pivot++) {
                         if (second_pivot != third_pivot && graph->isEdge(pivots[pivot], pivots[second_pivot]) && graph->isEdge(pivots[second_pivot], pivots[third_pivot])) {
                             weight = weight_vector[(pivot * num_vert) + second_pivot] + weight_vector[(second_pivot * num_vert) + third_pivot];
-                            if (weight_vector[(pivot * num_vert) + third_pivot] > weight && weight > 0) {
-                                std::cout << weight << " ";
+                            if (weight_vector[(pivot * num_vert) + third_pivot] > weight && weight > 0) {                                
                                 weight_vector[(pivot * num_vert) + third_pivot] = weight;
                             }
                         }
@@ -364,12 +360,13 @@ void floyd(Graph* graph) {
         for (int i = 0; i < weight_vector.size(); i++) {
             if (i % num_vert == 0 && i != 0) {
                 std::cout << std::endl;
-                std::cout << weight_vector[i] << " ";
+                std::cout << std::setw(4) << weight_vector[i] << " ";
             }
             else {
-                std::cout << weight_vector[i] << "  ";
+                std::cout << std::setw(4) << weight_vector[i] << "  ";
             }
         }
+        std::cout << std::endl;
     }
 }
 
@@ -558,8 +555,8 @@ void prim(Graph* graph) {
         std::cout << "Arbol de minimo costo: " << std::endl;
         for (int i = 0; i < edges.size(); i++) {
             std::cout
-                << edges[i].first->getValue() << " -> "
-                << edges[i].second->getValue() << " con peso: "
+                << graph->getLabel(edges[i].first) << " -> "
+                << graph->getLabel(edges[i].second) << " con peso: "
                 << weights[i] << std::endl;
         }
     }
@@ -657,8 +654,8 @@ void kruskal(Graph* graph) {
         std::cout << "Arbol de minimo costo: " << std::endl;
         for (int i = 0; i < outputEdges.size(); i++) {
             std::cout
-                << outputEdges[i].first->getValue() << " -> "
-                << outputEdges[i].second->getValue() << " con peso: "
+                << graph->getLabel(outputEdges[i].first) << " -> "
+                << graph->getLabel(outputEdges[i].second) << " con peso: "
                 << graph->getWeight(outputEdges[i].first, outputEdges[i].second) << std::endl;
         }
     }
@@ -1080,9 +1077,23 @@ int main()
     test_graph->createEdge(vE, vF, 4.0);
     test_graph->createEdge(vF, vD, 9.0);
 
+    //Vertex* vA = test_graph->addVert('A');
+    //Vertex* vB = test_graph->addVert('B');
+    //Vertex* vC = test_graph->addVert('C');
+    //Vertex* vD = test_graph->addVert('D');
+
+    //test_graph->createEdge(vA, vC, 2.0);
+    //test_graph->createEdge(vA, vB, 20.0);
+    //test_graph->createEdge(vA, vD, 4.0);
+    //test_graph->createEdge(vB, vD, 3.0);
+    //test_graph->createEdge(vB, vC, 10.0);
+    //test_graph->createEdge(vD, vC, 5.0);
+
     graphRegistry.insert({ "gA", test_graph });
 
-    showMenu();
+
+
+    //showMenu();
 
     return 0;
 }

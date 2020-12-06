@@ -8,19 +8,16 @@
 * @author B95092 V�ctor Jes�s Mora Abarca
 */
 
-#pragma once
-
-int const SIZE = 10; //cambiar para probar grafos mas grandes.
+int const GRAPH_SIZE = 10; //cambiar para probar grafos mas grandes.
 
 class Vertex {
 	char label;
 	int index;
 public:
 
-	Vertex() {
-	}
+	Vertex() {};
 
-	~Vertex() {}
+	~Vertex() {};
 
 
 	char getLabel() { return label; };
@@ -30,10 +27,13 @@ public:
 };
 
 class Graph {
-public:
-	Graph() {
+	double matrix[GRAPH_SIZE * GRAPH_SIZE];
+	Vertex* names[GRAPH_SIZE];
+	int cant_vert = 0;
+	int cant_edges = 0;
 
-	};
+public:
+	Graph() {};
 
 	~Graph() {
 		delete[] matrix;
@@ -60,11 +60,6 @@ public:
 	int getNumAdjVertices(Vertex* vertex);
 
 	void imprimir();
-private:
-	double matrix[SIZE * SIZE];
-	Vertex* names[SIZE];
-	int cant_vert = 0;
-	int cant_edges = 0;
 };
 
 
@@ -78,12 +73,12 @@ void Graph::clear() {
 }
 
 Vertex* Graph::addVert(char label) {
-	if (cant_vert < SIZE) {
+	if (cant_vert < GRAPH_SIZE) {
 		Vertex* vertex = new Vertex();
 		vertex->setIndex(cant_vert);
 		vertex->setLabel(label);
 		names[cant_vert] = vertex;
-		for (int index = cant_vert * SIZE; index < (cant_vert + 1) * SIZE; index++) {
+		for (int index = cant_vert * GRAPH_SIZE; index < (cant_vert + 1) * GRAPH_SIZE; index++) {
 			matrix[index] = -1;
 		}
 		cant_vert++;
@@ -102,14 +97,14 @@ void Graph::deleteVert(Vertex* vertex) {
 			names[row] = names[row + 1];
 			names[row]->setIndex(names[row]->getIndex() - 1);
 			for (int colum = 0; colum < cant_vert; colum++) {
-				matrix[(row * SIZE) + colum] = matrix[((row + 1) * SIZE) + colum];
+				matrix[(row * GRAPH_SIZE) + colum] = matrix[((row + 1) * GRAPH_SIZE) + colum];
 			}
 		}
 
 		//Corrimiento de las columnas
 		for (int row = vertex->getIndex(); row < cant_vert - 1; row++) {
 			for (int colum = vertex->getIndex(); colum < cant_vert; colum++) {
-				matrix[(row * SIZE) + colum] = matrix[(row * SIZE) + colum + 1];
+				matrix[(row * GRAPH_SIZE) + colum] = matrix[(row * GRAPH_SIZE) + colum + 1];
 			}
 		}
 		cant_vert--;
@@ -126,30 +121,30 @@ char Graph::getLabel(Vertex* vertex) {
 
 void Graph::createEdge(Vertex* vertex1, Vertex* vertex2, double weight) {
 	if (vertex1->getLabel() != vertex2->getLabel()) {
-		matrix[(vertex1->getIndex() * SIZE) + vertex2->getIndex()] = weight;
-		matrix[(vertex2->getIndex() * SIZE) + vertex1->getIndex()] = weight;
+		matrix[(vertex1->getIndex() * GRAPH_SIZE) + vertex2->getIndex()] = weight;
+		matrix[(vertex2->getIndex() * GRAPH_SIZE) + vertex1->getIndex()] = weight;
 		cant_edges++;
 	}
 }
 
 void Graph::deleteEdge(Vertex* vertex1, Vertex* vertex2) {
 	if (vertex1->getIndex() != vertex2->getIndex() && vertex1->getIndex() < cant_vert && vertex2->getIndex() < cant_vert) {
-		matrix[(vertex1->getIndex() * SIZE) + vertex2->getIndex()] = -1.0;
-		matrix[(vertex2->getIndex() * SIZE) + vertex1->getIndex()] = -1.0;
+		matrix[(vertex1->getIndex() * GRAPH_SIZE) + vertex2->getIndex()] = -1.0;
+		matrix[(vertex2->getIndex() * GRAPH_SIZE) + vertex1->getIndex()] = -1.0;
 		cant_edges--;
 	}
 }
 
 void Graph::changeWeight(Vertex* vertex1, Vertex* vertex2, double new_weight) {
 	if (vertex1->getIndex() != vertex2->getIndex() && vertex1->getIndex() < cant_vert && vertex2->getIndex() < cant_vert) {
-		matrix[(vertex1->getIndex() * SIZE) + vertex2->getIndex()] = new_weight;
-		matrix[(vertex2->getIndex() * SIZE) + vertex1->getIndex()] = new_weight;
+		matrix[(vertex1->getIndex() * GRAPH_SIZE) + vertex2->getIndex()] = new_weight;
+		matrix[(vertex2->getIndex() * GRAPH_SIZE) + vertex1->getIndex()] = new_weight;
 	}
 }
 
 double Graph::getWeight(Vertex* vertex1, Vertex* vertex2) {
 	if (vertex1->getIndex() != vertex2->getIndex() && vertex1->getIndex() < cant_vert && vertex2->getIndex() < cant_vert) {
-		return matrix[(vertex1->getIndex() * SIZE) + vertex2->getIndex()];
+		return matrix[(vertex1->getIndex() * GRAPH_SIZE) + vertex2->getIndex()];
 	}
 	return -1.0;
 }
@@ -170,9 +165,9 @@ Vertex* Graph::getNextVert(Vertex* vertex) {
 
 Vertex* Graph::getFirstAdj(Vertex* vertex) {
 	Vertex* vertex_toReturn = nullptr;
-	int row = vertex->getIndex() * SIZE;
+	int row = vertex->getIndex() * GRAPH_SIZE;
 	int colum = 0;
-	while (colum < SIZE) {
+	while (colum < GRAPH_SIZE) {
 		if (matrix[row + colum] != -1.0) {
 			vertex_toReturn = names[colum];
 			break;
@@ -185,9 +180,9 @@ Vertex* Graph::getFirstAdj(Vertex* vertex) {
 
 Vertex* Graph::getNextAdj(Vertex* vertex, Vertex* vertex2) {
 	Vertex* vertex_toReturn = nullptr;
-	int row = vertex->getIndex() * SIZE;
+	int row = vertex->getIndex() * GRAPH_SIZE;
 	int colum = vertex2->getIndex() + 1;
-	while (colum < SIZE) {
+	while (colum < GRAPH_SIZE) {
 		if (matrix[row + colum] != -1.0) {
 			vertex_toReturn = names[colum];
 			break;
@@ -203,9 +198,9 @@ bool Graph::isEdge(Vertex* vertex1, Vertex* vertex2) {
 
 int Graph::getNumAdjVertices(Vertex* vertex) {
 	int num_adj = 0;
-	int row = vertex->getIndex() * SIZE;
+	int row = vertex->getIndex() * GRAPH_SIZE;
 	int colum = 0;
-	while (colum < SIZE) {
+	while (colum < GRAPH_SIZE) {
 		if (matrix[row + colum] != -1.0) {
 			num_adj++;
 		}
@@ -215,10 +210,10 @@ int Graph::getNumAdjVertices(Vertex* vertex) {
 }
 
 void Graph::imprimir() {
-	for (int index = 0; index < cant_vert * SIZE; index++) {
-		if (index % SIZE == 0) {
+	for (int index = 0; index < cant_vert * GRAPH_SIZE; index++) {
+		if (index % GRAPH_SIZE == 0) {
 			std::cout << std::endl;
-			std::cout << names[index / SIZE]->getLabel() << "     ";
+			std::cout << names[index / GRAPH_SIZE]->getLabel() << "     ";
 		}
 		if (matrix[index] != -1) {
 			std::cout << matrix[index];

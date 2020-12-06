@@ -1,7 +1,6 @@
 #pragma once
 
 #include <iostream>
-#include <vector>
 #include <string>
 #include <sstream>
 
@@ -24,7 +23,10 @@ public:
         this->value = newValue;
     }
 
-    ~Vertex() {};
+    ~Vertex() {
+        delete nextAdj;
+        delete nextVertex;
+    };
 };
 
 class Edge {
