@@ -119,7 +119,6 @@ bool hasCycleWidth(Graph* graph) {
 }
 
 // Algoritmo B.
-
 void getCicle(Graph* graph, std::unordered_set<Vertex*> visitedVertices, Vertex* vertex, Vertex* adyacent, bool& cicle) {
     Vertex* adyacentAdyacent = graph->getFirstAdj(adyacent);
     while (adyacentAdyacent != nullptr && !cicle) {
@@ -339,15 +338,14 @@ void floyd(Graph* graph) {
             temp_vertex = graph->getNextVert(temp_vertex);
         }
 
-        std::cout << std::endl;
         double weight = 0.0;
         for (int pivot = 0; pivot < num_vert; pivot++) {
             for (int second_pivot = 0; second_pivot < num_vert; second_pivot++) {
-                if (pivot != second_pivot) {
+                if (pivot != second_pivot && graph->isEdge(pivots[pivot], pivots[second_pivot])) {
                     for (int third_pivot = 0; third_pivot < num_vert; third_pivot++) {
-                        if (second_pivot != third_pivot && graph->isEdge(pivots[pivot], pivots[second_pivot]) && graph->isEdge(pivots[second_pivot], pivots[third_pivot])) {
+                        if (second_pivot != third_pivot && pivot != third_pivot && graph->isEdge(pivots[second_pivot], pivots[third_pivot])) {
                             weight = weight_vector[(pivot * num_vert) + second_pivot] + weight_vector[(second_pivot * num_vert) + third_pivot];
-                            if (weight_vector[(pivot * num_vert) + third_pivot] > weight && weight > 0) {                                
+                            if (weight_vector[(pivot * num_vert) + third_pivot] > weight && weight > 0 || weight_vector[(pivot * num_vert) + third_pivot] == -1 && weight != -1) {
                                 weight_vector[(pivot * num_vert) + third_pivot] = weight;
                             }
                         }
@@ -356,17 +354,15 @@ void floyd(Graph* graph) {
 
             }
         }
-        std::cout << std::endl;
         for (int i = 0; i < weight_vector.size(); i++) {
             if (i % num_vert == 0 && i != 0) {
                 std::cout << std::endl;
                 std::cout << std::setw(4) << weight_vector[i] << " ";
             }
             else {
-                std::cout << std::setw(4) << weight_vector[i] << "  ";
+                std::cout << std::setw(4)<< weight_vector[i] << "  ";
             }
         }
-        std::cout << std::endl;
     }
 }
 

@@ -8,16 +8,19 @@
 * @author B95092 V�ctor Jes�s Mora Abarca
 */
 
-int const GRAPH_SIZE = 10; //cambiar para probar grafos mas grandes.
+#pragma once
+
+int const GRAPH_SIZE = 30; //cambiar para probar grafos mas grandes.
 
 class Vertex {
 	char label;
 	int index;
 public:
 
-	Vertex() {};
+	Vertex() {
+	}
 
-	~Vertex() {};
+	~Vertex() {}
 
 
 	char getLabel() { return label; };
@@ -27,13 +30,10 @@ public:
 };
 
 class Graph {
-	double matrix[GRAPH_SIZE * GRAPH_SIZE];
-	Vertex* names[GRAPH_SIZE];
-	int cant_vert = 0;
-	int cant_edges = 0;
-
 public:
-	Graph() {};
+	Graph() {
+
+	};
 
 	~Graph() {
 		delete[] matrix;
@@ -60,6 +60,11 @@ public:
 	int getNumAdjVertices(Vertex* vertex);
 
 	void imprimir();
+private:
+	double matrix[GRAPH_SIZE * GRAPH_SIZE];
+	Vertex* names[GRAPH_SIZE];
+	int cant_vert = 0;
+	int cant_edges = 0;
 };
 
 
@@ -193,7 +198,7 @@ Vertex* Graph::getNextAdj(Vertex* vertex, Vertex* vertex2) {
 }
 
 bool Graph::isEdge(Vertex* vertex1, Vertex* vertex2) {
-	return matrix[(vertex1->getIndex()) * cant_vert + (vertex2->getIndex())] != 1.0;
+	return matrix[(vertex1->getIndex() * GRAPH_SIZE) + vertex2->getIndex()] != -1;
 }
 
 int Graph::getNumAdjVertices(Vertex* vertex) {
