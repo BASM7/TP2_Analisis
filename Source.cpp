@@ -13,8 +13,8 @@
 #include <conio.h>
 #include <iomanip>
 
-#include "GraphB.h"
 //#include "GraphA.h"
+#include "GraphB.h"
 
 typedef std::unordered_set<Vertex*> dic_vertices;
 typedef std::vector<std::pair<Vertex*, Vertex*>> set_of_edges;
@@ -841,13 +841,11 @@ void showMenu() {
             std::cin >> name;
             temp_graph = graphRegistry.find(name)->second;
             graphRegistry.erase(graphRegistry.find(name));
-
-            //delete temp_graph;
             break;
         case 3:
             // Vaciar
             temp_graph = graphRegistry.find(getGraphName())->second;
-            //temp_graph->clear();
+            temp_graph->clear();
             pressEnter();
             break;
         case 4:
@@ -1091,9 +1089,16 @@ int main()
 
     graphRegistry.insert({ "gA", test_graph });
 
+    //printGraphWidth(test_graph);
 
+    ////isolateVertex(test_graph, vF);
+    ////test_graph->deleteEdge(vD, vB);
+    //test_graph->deleteVert(vA);
+    //std::cout << std::endl;
 
-    //showMenu();
+    //printGraphWidth(test_graph);
+
+    showMenu();
 
     return 0;
 }
