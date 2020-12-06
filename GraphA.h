@@ -58,8 +58,6 @@ public:
 	int getNumEdges() { return cant_edges; };
 	int getNumVertices() { return cant_vert; };
 	int getNumAdjVertices(Vertex* vertex);
-
-	void imprimir();
 private:
 	double matrix[GRAPH_SIZE * GRAPH_SIZE];
 	Vertex* names[GRAPH_SIZE];
@@ -212,20 +210,4 @@ int Graph::getNumAdjVertices(Vertex* vertex) {
 		colum++;
 	}
 	return num_adj;
-}
-
-void Graph::imprimir() {
-	for (int index = 0; index < cant_vert * GRAPH_SIZE; index++) {
-		if (index % GRAPH_SIZE == 0) {
-			std::cout << std::endl;
-			std::cout << names[index / GRAPH_SIZE]->getLabel() << "     ";
-		}
-		if (matrix[index] != -1) {
-			std::cout << matrix[index];
-		}
-		else {
-			std::cout << "0";
-		}
-		std::cout << " ";
-	}
 }

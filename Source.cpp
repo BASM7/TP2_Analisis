@@ -280,25 +280,22 @@ void dijkstra(Graph* graph, Vertex* vertex) {// a b d e f
             }
             temp_vertex = graph->getNextVert(temp_vertex);
         }
-
+        done[0] = true;
         int do_pivot = 0;
-        int index;
-        while (do_pivot < pivots.size()) {
-            index = 0;
+        int index_less;
+        while (do_pivot < pivots.size() - 1) {
+            index_less = 0;
             for (int i = 0; i < pivots.size(); i++) {
-                if (done[index] && weight_vector[i] != -1) {
-                    index = i;
-                }
-                if (weight_vector[index] > weight_vector[i] && done[i] != 1 && weight_vector[i] != -1) {
-                    index = i;
+                if (weight_vector[i] != -1 && weight_vector[index_less] == -1 || weight_vector[index_less] > weight_vector[i]) {
+                    index_less = i;
                 }
             }
 
-            done[index] = true;
-            temp_vertex = pivots[index];
+            done[index_less] = true;
+            temp_vertex = pivots[index_less];
 
             for (int i = 0; i < pivots.size(); i++) {
-                if (index != i) {
+                if (index_less != i) {
                     if (weight_vector[i] > graph->getWeight(temp_vertex, pivots[i]) && !done[i] && weight_vector[i] != -1) {
                         weight_vector[i] = graph->getWeight(temp_vertex, pivots[i]);
                         path[i] = temp_vertex;
@@ -309,11 +306,11 @@ void dijkstra(Graph* graph, Vertex* vertex) {// a b d e f
                     }
                 }
             }
-
             do_pivot++;
         }
+
         for (int i = 0; i < pivots.size(); i++) {
-            std::cout << "Ir a " << graph->getLabel(pivots[i])
+            std::cout << "Ir " << graph->getLabel(pivots[i])
                 << " por " << graph->getLabel(path[i]) << std::endl;
         }
     }
